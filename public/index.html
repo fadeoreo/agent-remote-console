@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f3">
+  <meta name="description" content="Agent Remote Console is a self-hosted web console for local Codex, Claude Code, and OpenCode sessions.">
+  <title>Agent Remote Console</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171917;
+      --muted: #68706a;
+      --line: #d9ddd9;
+      --paper: #f5f6f3;
+      --surface: #ffffff;
+      --accent: #176b4d;
+      --accent-2: #c74934;
+      --warning: #9a6416;
+      --shadow: 0 1px 2px rgba(18, 28, 22, .06), 0 8px 22px rgba(18, 28, 22, .06);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    body { min-height: 100dvh; }
+    button, input, textarea, select { font: inherit; letter-spacing: 0; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .login-shell { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+    .login-language { position: fixed; top: max(14px, env(safe-area-inset-top)); right: 16px; }
+    .login { width: min(100%, 360px); }
+    .mark { width: 44px; height: 44px; display: grid; place-items: center; background: var(--ink); color: white; font: 700 18px/1 ui-monospace, SFMono-Regular, Menlo, monospace; border-radius: 6px; margin-bottom: 22px; }
+    h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.15; }
+    .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+    .field { width: 100%; height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 0 14px; outline: none; }
+    .field:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23,107,77,.12); }
+    .primary { border: 0; border-radius: 6px; min-height: 44px; padding: 0 16px; background: var(--accent); color: white; font-weight: 650; }
+    .primary:disabled { opacity: .45; cursor: default; }
+    .login .primary { width: 100%; margin-top: 12px; }
+    .error { min-height: 20px; color: var(--accent-2); font-size: 13px; margin-top: 10px; }
+
+    .app { min-height: 100dvh; }
+    .app.composing { padding-bottom: calc(var(--composer-height, 190px) + 20px); }
+    header { position: sticky; top: 0; z-index: 10; height: 54px; padding: 0 16px; border-bottom: 1px solid var(--line); background: rgba(245,246,243,.95); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-between; }
+    .brand { min-width: 0; display: flex; align-items: center; gap: 10px; font-weight: 720; }
+    .brand .mark { width: 34px; height: 30px; margin: 0; font-size: 10px; border-radius: 5px; }
+    .brand-name { min-width: 0; overflow: hidden; font-size: 14px; white-space: nowrap; text-overflow: ellipsis; }
+    .header-actions { display: flex; gap: 6px; }
+    .icon-button { width: 38px; height: 38px; border: 1px solid transparent; background: transparent; border-radius: 5px; color: var(--muted); display: grid; place-items: center; font-size: 18px; }
+    .icon-button:hover { border-color: var(--line); background: var(--surface); color: var(--ink); }
+    .tabs { position: sticky; top: 54px; z-index: 9; display: grid; grid-template-columns: 1fr 1fr; padding: 4px 16px; border-bottom: 1px solid var(--line); background: var(--paper); }
+    .tab { height: 38px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-weight: 650; }
+    .tab.active { color: var(--ink); border-color: var(--accent); }
+    main { width: min(100%, 780px); margin: 0 auto; padding: 18px 16px 32px; }
+    .toolbar { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .toolbar strong { min-width: 0; overflow: hidden; color: var(--muted); font-size: 13px; text-transform: uppercase; text-overflow: ellipsis; white-space: nowrap; }
+    .session-controls { display: grid; gap: 9px; margin-bottom: 22px; }
+    .session-control-row { display: grid; grid-template-columns: minmax(0, 1fr) 126px; gap: 9px; }
+    .session-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: #ecefeb; }
+    .session-mode button { height: 32px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .session-mode button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(18,28,22,.1); }
+    .provider-filter { min-width: 0; width: 100%; height: 40px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 650; outline: none; }
+    .provider-filter:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23,107,77,.12); }
+    .session-search { width: 100%; height: 40px; margin: 0; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); outline: none; font-size: 13px; }
+    .session-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23,107,77,.12); }
+    .text-button { border: 0; background: transparent; color: var(--accent); padding: 7px; font-weight: 650; }
+    .session-list { display: block; }
+    .project-group + .project-group { margin-top: 38px; }
+    .project-header { position: relative; margin-bottom: 8px; padding: 0 10px 0 22px; }
+    .project-header::before { content: ''; position: absolute; top: 5px; left: 6px; width: 7px; height: 7px; border: 2px solid var(--accent); border-radius: 2px; background: var(--paper); }
+    .project-heading { display: flex; min-width: 0; align-items: baseline; gap: 8px; }
+    .project-name { min-width: 0; overflow: hidden; color: var(--ink); font-size: 15px; font-weight: 720; white-space: nowrap; text-overflow: ellipsis; }
+    .project-count { flex: none; color: var(--muted); font-size: 11px; }
+    .project-path { margin-top: 3px; overflow: hidden; color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; text-overflow: ellipsis; }
+    .project-sessions { margin-left: 10px; padding-left: 20px; }
+    .recent-sessions { border-top: 1px solid var(--line); }
+    .session { position: relative; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 14px 10px 15px; }
+    .session:hover { background: rgba(255,255,255,.58); }
+    .session.selected { background: rgba(23,107,77,.07); box-shadow: inset 3px 0 0 var(--accent); }
+    .project-sessions > .session { margin: 2px 0; padding: 12px 10px 13px; border-bottom: 0; border-radius: 4px; }
+    .project-sessions > .session::before { content: ''; position: absolute; top: -2px; bottom: -2px; left: -20px; border-left: 1px solid #c8cfca; }
+    .project-sessions > .session::after { content: ''; position: absolute; top: 23px; left: -20px; width: 15px; border-top: 1px solid #c8cfca; }
+    .project-sessions > .session:first-child::before { top: -10px; }
+    .project-sessions > .session:last-child::before { bottom: auto; height: 26px; }
+    .project-sessions > .session:only-child::before { top: -10px; height: 34px; }
+    .project-sessions > .session.selected { box-shadow: none; }
+    .project-sessions > .session.selected::after { border-color: var(--accent); border-width: 2px; }
+    .session-top { display: flex; gap: 10px; align-items: flex-start; }
+    .session-title { min-width: 0; flex: 1; display: -webkit-box; overflow: hidden; font-size: 14px; line-height: 1.45; font-weight: 670; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .pin { color: var(--warning); font-size: 15px; }
+    .session-details { display: flex; min-width: 0; align-items: center; gap: 7px; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .session-path { min-width: 0; flex: 1; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; text-overflow: ellipsis; }
+    .session-time { flex: none; }
+    .chips { display: flex; flex: none; gap: 5px; flex-wrap: wrap; }
+    .chip { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 4px; background: #edf0ec; color: #56605a; font-size: 10px; }
+    .chip.warn { background: #fff1da; color: #81500b; }
+    .empty { padding: 40px 12px; text-align: center; color: var(--muted); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    .output { min-width: 0; display: grid; gap: 10px; }
+    .event { min-width: 0; max-width: 100%; border-left: 3px solid var(--line); padding: 5px 0 5px 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.55; }
+    .event .markdown, .event .markdown > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+    .event.message { border-color: var(--accent); font-size: 15px; }
+    .event.user { margin-left: 18px; border-color: var(--accent-2); background: #fff8f5; border-radius: 0 6px 6px 0; padding: 9px 11px; }
+    .event.error { border-color: var(--accent-2); color: #8e2f22; }
+    .event.tool { border-color: #477797; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .event.reasoning { border-color: #9a8768; color: #61584a; }
+    .event.status, .event.complete { color: var(--muted); font-size: 13px; }
+    .event-title { display: block; margin-bottom: 4px; color: var(--ink); font-weight: 700; }
+    .event.activity-group { border-left: 0; padding: 2px 0; }
+    .activity-group > summary { display: flex; min-width: 0; gap: 7px; align-items: center; color: var(--muted); cursor: pointer; list-style: none; user-select: none; font-size: 13px; }
+    .activity-group > summary::-webkit-details-marker { display: none; }
+    .activity-group > summary::before { content: '›'; width: 12px; color: var(--muted); font: 18px/1 sans-serif; transition: transform .12s; transform-origin: center; }
+    .activity-group[open] > summary::before { transform: rotate(90deg); }
+    .activity-group-title { color: var(--ink); font-weight: 650; }
+    .activity-group-count { color: var(--muted); }
+    .activity-list { position: relative; display: grid; gap: 7px; margin: 9px 0 3px 5px; padding-left: 20px; }
+    .activity-list::before { content: ''; position: absolute; top: 7px; bottom: 7px; left: 5px; width: 1px; background: var(--line); }
+    .activity-row { position: relative; min-width: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .activity-row::before { content: '✓'; position: absolute; top: 1px; left: -20px; z-index: 1; display: grid; width: 12px; height: 12px; place-items: center; border-radius: 50%; background: var(--paper); color: var(--accent); font: 10px/1 sans-serif; }
+    .activity-details { min-width: 0; }
+    .activity-details summary { min-width: 0; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 5px; align-items: center; color: var(--muted); cursor: pointer; list-style: none; user-select: none; }
+    .activity-details summary::-webkit-details-marker { display: none; }
+    .activity-details summary::before { content: '›'; color: var(--muted); font: 16px/1 sans-serif; transition: transform .12s; transform-origin: center; }
+    .activity-details[open] summary::before { transform: rotate(90deg); }
+    .activity-label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); font-weight: 650; }
+    .activity-status { color: var(--muted); font: 11px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .activity-body { max-height: 40dvh; margin: 7px 0 2px 17px; padding: 8px 10px; overflow: auto; border: 1px solid var(--line); border-radius: 5px; background: #f0f2ef; white-space: pre-wrap; overflow-wrap: anywhere; color: #465049; }
+    .markdown { min-width: 0; white-space: normal; }
+    .markdown > :first-child { margin-top: 0; }
+    .markdown > :last-child { margin-bottom: 0; }
+    .markdown p { margin: 0 0 10px; }
+    .markdown h1, .markdown h2, .markdown h3, .markdown h4 { margin: 18px 0 8px; line-height: 1.3; }
+    .markdown h1 { font-size: 20px; }
+    .markdown h2 { font-size: 18px; }
+    .markdown h3 { font-size: 16px; }
+    .markdown h4 { font-size: 14px; }
+    .markdown ul, .markdown ol { margin: 8px 0 12px; padding-left: 22px; }
+    .markdown li { margin: 4px 0; }
+    .markdown blockquote { margin: 10px 0; padding: 7px 12px; border-left: 3px solid #9a8768; color: #5f594f; background: #f1eee8; }
+    .markdown code { padding: 2px 5px; border-radius: 4px; background: #ecefeb; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    .markdown pre { max-width: 100%; margin: 10px 0; padding: 12px; overflow-x: auto; border: 1px solid #303631; border-radius: 6px; background: #1d211e; color: #ecf0ec; }
+    .markdown pre code { padding: 0; background: transparent; color: inherit; overflow-wrap: normal; white-space: pre; }
+    .markdown table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+    .markdown th, .markdown td { min-width: 90px; padding: 7px 9px; border: 1px solid var(--line); text-align: left; }
+    .markdown th { background: #edf0ec; }
+    .markdown a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    .markdown hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+
+    .composer { position: fixed; z-index: 20; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); border-top: 1px solid var(--line); padding: 10px max(14px, calc((100vw - 780px) / 2 + 16px)) calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(25,35,28,.06); }
+    .selected-row { display: flex; align-items: center; gap: 8px; min-height: 28px; margin-bottom: 7px; }
+    .selected-name { min-width: 0; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted); }
+    .workspace-button { min-height: 28px; padding: 0 4px; font-size: 12px; }
+    .queue-list { display: grid; gap: 6px; max-height: 160px; margin: 0 0 8px; overflow-y: auto; }
+    .queue-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 5px; min-height: 42px; padding: 7px 7px 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fafbfa; }
+    .queue-prompt { min-width: 0; overflow: hidden; color: var(--ink); font-size: 13px; line-height: 1.4; white-space: nowrap; text-overflow: ellipsis; }
+    .queue-action { min-height: 30px; border: 0; border-radius: 4px; padding: 0 7px; background: transparent; color: var(--muted); font-size: 12px; }
+    .queue-action:hover { background: #edf0ec; color: var(--ink); }
+    .queue-steer { color: var(--accent); font-weight: 650; }
+    .queue-delete { width: 30px; padding: 0; color: var(--accent-2); font-size: 16px; }
+    .queue-edit { width: 30px; padding: 0; font-size: 17px; }
+    .workspace-picker { display: grid; gap: 7px; margin-bottom: 7px; }
+    .workspace { width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 5px; padding: 0 8px; background: white; font-size: 12px; }
+    .workspace-custom { display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 7px; }
+    .workspace-path { min-width: 0; width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 5px; padding: 0 8px; background: white; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .workspace-save { min-height: 36px; padding: 0 8px; font-size: 12px; }
+    .run-options { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .85fr) auto; gap: 7px; margin-bottom: 7px; }
+    .run-options.no-effort { grid-template-columns: minmax(0, 1fr) auto; }
+    .option-select { min-width: 0; width: 100%; height: 34px; border: 1px solid var(--line); border-radius: 5px; padding: 0 7px; background: white; font-size: 12px; }
+    .access-toggle { height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; background: white; color: var(--muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
+    .access-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+    .toggle-track { position: relative; width: 26px; height: 16px; flex: none; border-radius: 10px; background: #c8ceca; transition: background .15s; }
+    .toggle-track::after { content: ''; position: absolute; width: 12px; height: 12px; top: 2px; left: 2px; border-radius: 50%; background: white; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+    .access-toggle input:checked + .toggle-track { background: var(--accent-2); }
+    .access-toggle input:checked + .toggle-track::after { transform: translateX(10px); }
+    .access-toggle:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23,107,77,.12); }
+    .compose-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 8px; align-items: stretch; }
+    .compose-row.running { grid-template-columns: minmax(0, 1fr) 46px 42px; }
+    textarea { width: 100%; height: 64px; resize: none; border: 1px solid var(--line); border-radius: 6px; background: white; padding: 10px 12px; outline: none; line-height: 1.4; }
+    .send { width: 46px; min-height: 46px; padding: 0; font-size: 18px; }
+    .stop-button { width: 42px; height: auto; min-height: 46px; border-color: var(--line); background: #fff4f1; color: var(--accent-2); font-size: 14px; }
+    .running-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; animation: pulse 1.4s infinite; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    @media (min-width: 760px) {
+      header { padding-left: max(16px, calc((100vw - 780px) / 2)); padding-right: max(16px, calc((100vw - 780px) / 2)); }
+      .tabs { padding-left: max(16px, calc((100vw - 780px) / 2)); padding-right: max(16px, calc((100vw - 780px) / 2)); }
+      .session-controls { grid-template-columns: minmax(0, 1fr) 330px; align-items: center; }
+      .session-search { grid-column: 1; grid-row: 1; }
+      .session-control-row { grid-column: 2; grid-row: 1; }
+    }
+    @media (max-width: 380px) {
+      .brand-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <section id="loginShell" class="login-shell">
+    <button id="loginLanguageButton" class="icon-button login-language" type="button" title="Switch to English" aria-label="Switch to English">EN</button>
+    <form id="loginForm" class="login">
+      <div class="mark">ARC</div>
+      <h1>Agent Remote Console</h1>
+      <p id="tagline" class="sub">从手机继续本机上的编程代理任务</p>
+      <input id="password" class="field" type="password" autocomplete="current-password" placeholder="密码" required>
+      <button id="loginButton" class="primary" type="submit">登录</button>
+      <div id="loginError" class="error"></div>
+    </form>
+  </section>
+
+  <section id="app" class="app hidden">
+    <header>
+      <div class="brand" aria-label="Agent Remote Console"><div class="mark">ARC</div><span class="brand-name">Agent Remote Console</span></div>
+      <div class="header-actions">
+        <button id="languageButton" class="icon-button" title="Switch to English" aria-label="Switch to English">EN</button>
+        <button id="refreshButton" class="icon-button" title="刷新" aria-label="刷新">↻</button>
+        <button id="logoutButton" class="icon-button" title="退出" aria-label="退出">⇥</button>
+      </div>
+    </header>
+    <nav class="tabs" aria-label="视图">
+      <button id="sessionsTab" class="tab active" data-view="sessions">任务</button>
+      <button id="outputTab" class="tab" data-view="output">对话</button>
+    </nav>
+    <main>
+      <section id="sessionsView">
+        <strong id="sessionHeading" class="sr-only">最近任务</strong>
+        <div class="session-controls">
+          <input id="sessionSearch" class="session-search" type="search" autocomplete="off" placeholder="搜索任务或工作目录" aria-label="搜索任务">
+          <div class="session-control-row">
+            <div id="sessionMode" class="session-mode" aria-label="任务排列方式"></div>
+            <select id="providerFilter" class="provider-filter" aria-label="工具筛选"></select>
+          </div>
+        </div>
+        <div id="sessionList" class="session-list"></div>
+      </section>
+      <section id="outputView" class="hidden">
+        <div class="toolbar"><strong id="conversationTitle">对话</strong><span id="runState"></span></div>
+        <div id="output" class="output"><div class="empty">暂无输出</div></div>
+      </section>
+    </main>
+    <section class="composer hidden">
+      <div class="selected-row">
+        <span id="runningDot" class="running-dot hidden"></span>
+        <span id="selectedName" class="selected-name">选择一个任务</span>
+        <button id="workspaceButton" class="text-button workspace-button hidden" type="button">目录</button>
+        <button id="pinButton" class="text-button workspace-button hidden" type="button" disabled>固定</button>
+      </div>
+      <div id="workspacePicker" class="workspace-picker hidden">
+        <select id="workspace" class="workspace" aria-label="已有工作目录"></select>
+        <div class="workspace-custom">
+          <input id="workspacePath" class="workspace-path" type="text" autocomplete="off" spellcheck="false" placeholder="输入完整目录路径" aria-label="自定义工作目录">
+          <button id="workspaceSave" class="primary workspace-save" type="button">保存</button>
+        </div>
+      </div>
+      <div class="run-options">
+        <select id="model" class="option-select" aria-label="模型"></select>
+        <select id="effort" class="option-select" aria-label="思考强度"></select>
+        <label id="accessToggle" class="access-toggle" title="允许代理跳过权限确认">
+          <input id="fullAccess" type="checkbox">
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span id="accessLabel">完全访问</span>
+        </label>
+      </div>
+      <div id="queueList" class="queue-list hidden" aria-label="待处理消息"></div>
+      <div class="compose-row">
+        <textarea id="prompt" placeholder="输入指令" disabled></textarea>
+        <button id="sendButton" class="primary send" disabled aria-label="发送" title="发送">↑</button>
+        <button id="stopButton" class="icon-button stop-button hidden" type="button" aria-label="停止" title="停止">■</button>
+      </div>
+    </section>
+  </section>
+
+  <script src="/vendor/marked.umd.js"></script>
+  <script src="/vendor/purify.min.js"></script>
+  <script>
+    const state = { sessions: [], projects: [], providers: [], providerFilter: 'all', sessionMode: readPreference('remoteLiteSessionMode', 'projects'), sessionSearch: '', lang: readLanguage(), models: [], selected: null, runId: null, source: null, running: false, redirectSessionId: null, lastEventId: 0, activityGroup: null, queueItems: new Map() };
+    const $ = (id) => document.getElementById(id);
+    const effortLabels = { low: '低', medium: '中', high: '高', xhigh: '超高', max: '最大', ultra: 'Ultra' };
+    const copy = {
+      zh: {
+        tagline: '从手机继续本机上的编程代理任务', password: '密码', login: '登录', refresh: '刷新', logout: '退出',
+        tasks: '任务', conversation: '对话', pin: '固定', unpin: '取消固定', all: '全部',
+        search: '搜索任务或工作目录', projects: '按项目', recentMode: '最近', recent: '最近任务', projectTasks: '项目任务', sessionsCount: '{count} 个任务', unknownProject: '未记录目录', noTasks: '没有找到任务', noProviderTasks: '这个工具还没有可恢复的任务',
+        showing: '显示前 {count} 条，搜索可以找到其余任务', selectTask: '选择一个任务', directory: '目录',
+        chooseWorkspace: '选择工作目录', customWorkspace: '输入完整目录路径', save: '保存', missingDirectory: '目录缺失',
+        defaultModel: 'CLI 默认模型', thinking: '思考', fullAccess: '完全访问', input: '输入指令', freeInput: '随心输入',
+        send: '发送', enqueue: '加入队列', stop: '停止', noOutput: '暂无输出', loading: '正在读取对话', noConversation: '暂无对话',
+        running: '运行中', reconnecting: '后台继续，等待连接', processing: '执行中', processed: '执行完成', items: '· {count} 项',
+        working: '处理中', reasoning: '思考过程', tool: '工具调用', steer: '调整方向', edit: '编辑', remove: '删除',
+        editQueued: '编辑待处理消息', workspaceRequired: '请选择工作目录', requestFailed: '请求失败', serviceError: '服务错误',
+      },
+      en: {
+        tagline: 'Continue local coding-agent sessions from any browser.', password: 'Password', login: 'Sign in', refresh: 'Refresh', logout: 'Sign out',
+        tasks: 'Tasks', conversation: 'Conversation', pin: 'Pin', unpin: 'Unpin', all: 'All',
+        search: 'Search tasks or workspaces', projects: 'Projects', recentMode: 'Recent', recent: 'Recent tasks', projectTasks: 'Project tasks', sessionsCount: '{count} tasks', unknownProject: 'Unknown workspace', noTasks: 'No tasks found', noProviderTasks: 'No resumable tasks for this provider',
+        showing: 'Showing the first {count}; search to find more', selectTask: 'Select a task', directory: 'Workspace',
+        chooseWorkspace: 'Choose a workspace', customWorkspace: 'Enter an absolute workspace path', save: 'Save', missingDirectory: 'Missing workspace',
+        defaultModel: 'CLI default model', thinking: 'Effort', fullAccess: 'Full access', input: 'Enter an instruction', freeInput: 'Add a follow-up',
+        send: 'Send', enqueue: 'Add to queue', stop: 'Stop', noOutput: 'No output yet', loading: 'Loading conversation', noConversation: 'No conversation yet',
+        running: 'Running', reconnecting: 'Running in background; reconnecting', processing: 'Working', processed: 'Completed', items: '· {count} items',
+        working: 'Working', reasoning: 'Reasoning', tool: 'Tool call', steer: 'Steer now', edit: 'Edit', remove: 'Remove',
+        editQueued: 'Edit queued message', workspaceRequired: 'Choose a workspace', requestFailed: 'Request failed', serviceError: 'Service error',
+      },
+    };
+
+    function readLanguage() {
+      try { return localStorage.getItem('remoteLiteLanguage') || (navigator.language.startsWith('zh') ? 'zh' : 'en'); }
+      catch { return 'zh'; }
+    }
+
+    function t(key, values = {}) {
+      let value = copy[state.lang]?.[key] || copy.zh[key] || key;
+      for (const [name, replacement] of Object.entries(values)) value = value.replace(`{${name}}`, replacement);
+      return value;
+    }
+
+    const serverTranslations = {
+      '请稍后再试': 'Too many attempts; try again later', '密码错误': 'Invalid password', '找不到任务': 'Task not found',
+      '工作目录不存在': 'Workspace does not exist', '工作目录不存在，请重新选择': 'Workspace does not exist; choose another one',
+      '已有任务正在运行': 'Another task is already running', '请选择任务并输入指令': 'Select a task and enter an instruction',
+      '请选择工作目录': 'Choose a workspace', '没有正在运行的任务': 'No task is running', '请输入指令': 'Enter an instruction',
+      '运行记录不存在': 'Run not found', '服务错误': 'Service error', '请求过大': 'Request is too large',
+    };
+
+    function localizeServerText(value) {
+      if (state.lang === 'zh') return value;
+      return serverTranslations[value] || value
+        .replace(/^正在连接 (.+)$/, 'Connecting to $1')
+        .replace(/^开始处理队列 · 剩余 (\d+)$/, 'Processing queue · $1 remaining')
+        .replace(/^已加入队列 · (\d+)$/, 'Added to queue · $1')
+        .replace('开始处理', 'Working')
+        .replace('已完成', 'Completed')
+        .replace('已停止', 'Stopped')
+        .replace('已连接任务', 'Session connected');
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+      const body = await response.json().catch(() => ({}));
+      if (response.status === 401 && url !== '/api/login') showLogin();
+      if (!response.ok) throw new Error(localizeServerText(body.error || t('requestFailed')));
+      return body;
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+      $('tagline').textContent = t('tagline');
+      $('password').placeholder = t('password');
+      $('loginButton').textContent = t('login');
+      $('sessionsTab').textContent = t('tasks');
+      $('outputTab').textContent = t('conversation');
+      $('refreshButton').title = $('refreshButton').ariaLabel = t('refresh');
+      $('logoutButton').title = $('logoutButton').ariaLabel = t('logout');
+      $('languageButton').textContent = state.lang === 'zh' ? 'EN' : '中';
+      $('languageButton').title = $('languageButton').ariaLabel = state.lang === 'zh' ? 'Switch to English' : '切换到中文';
+      $('loginLanguageButton').textContent = $('languageButton').textContent;
+      $('loginLanguageButton').title = $('loginLanguageButton').ariaLabel = $('languageButton').title;
+      $('sessionSearch').placeholder = t('search');
+      $('sessionSearch').ariaLabel = t('search');
+      $('providerFilter').ariaLabel = state.lang === 'zh' ? '工具筛选' : 'Provider filter';
+      $('workspaceButton').textContent = t('directory');
+      $('workspacePath').placeholder = t('customWorkspace');
+      $('workspaceSave').textContent = t('save');
+      $('accessLabel').textContent = t('fullAccess');
+      $('prompt').placeholder = state.running ? t('freeInput') : t('input');
+      $('sendButton').title = $('sendButton').ariaLabel = state.running ? t('enqueue') : t('send');
+      $('stopButton').title = $('stopButton').ariaLabel = t('stop');
+      $('conversationTitle').textContent = state.selected?.title || t('conversation');
+      $('selectedName').textContent = state.selected?.title || t('selectTask');
+      $('pinButton').textContent = state.selected?.pinned ? t('unpin') : t('pin');
+      renderProviderFilter();
+      renderSessionMode();
+      renderSessions();
+      if (state.selected) configureRunOptions();
+    }
+
+    function showLogin() {
+      $('loginShell').classList.remove('hidden');
+      $('app').classList.add('hidden');
+      $('password').focus();
+    }
+
+    function showApp() {
+      $('loginShell').classList.add('hidden');
+      $('app').classList.remove('hidden');
+    }
+
+    function formatTime(value) {
+      return new Intl.DateTimeFormat(state.lang === 'zh' ? 'zh-CN' : 'en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+    }
+
+    function shortPath(value) {
+      if (!value) return t('unknownProject');
+      return value.replace(/^\/Users\/[^/]+/, '~');
+    }
+
+    function projectName(value) {
+      if (!value) return t('unknownProject');
+      return value.split(/[\\/]/).filter(Boolean).at(-1) || value;
+    }
+
+    function readPreference(key, fallback) {
+      try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+    }
+
+    function savePreference(key, value) {
+      try { localStorage.setItem(key, value); } catch {}
+    }
+
+    function selectedProvider() {
+      return state.providers.find((item) => item.id === state.selected?.provider) || state.providers[0];
+    }
+
+    function configureEfforts(preferred = null) {
+      const model = state.models.find((item) => item.id === $('model').value) || state.models[0];
+      const effort = $('effort');
+      effort.replaceChildren();
+      const provider = selectedProvider();
+      const efforts = model?.efforts || ['low', 'medium', 'high', 'xhigh', 'max'];
+      const saved = preferred || readPreference(`remoteLiteEffort:${provider?.id}`, provider?.defaultEffort || 'high');
+      for (const value of efforts) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = `${t('thinking')} · ${state.lang === 'zh' ? (effortLabels[value] || value) : value}`;
+        effort.appendChild(option);
+      }
+      effort.value = efforts.includes(saved) ? saved : efforts.includes('high') ? 'high' : efforts[0];
+    }
+
+    async function loadOptions() {
+      const data = await api('/api/options');
+      state.providers = data.providers;
+      renderProviderFilter();
+      $('fullAccess').checked = readPreference('remoteLiteFullAccess', 'false') === 'true';
+    }
+
+    function configureRunOptions() {
+      const provider = selectedProvider();
+      state.models = [...(provider?.models || [])];
+      if (state.selected?.model && !state.models.some((item) => item.id === state.selected.model)) {
+        state.models.unshift({ id: state.selected.model, name: state.selected.model, efforts: [] });
+      }
+      const model = $('model');
+      model.replaceChildren();
+      if (!state.models.length) {
+        const item = document.createElement('option');
+        item.value = state.selected?.model || '';
+        item.textContent = state.selected?.model || t('defaultModel');
+        model.appendChild(item);
+      }
+      for (const item of state.models) {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        model.appendChild(option);
+      }
+      const savedModel = readPreference(`remoteLiteModel:${provider?.id}`, state.selected?.model || provider?.defaultModel || '');
+      model.value = state.models.some((item) => item.id === savedModel) ? savedModel : (state.selected?.model || provider?.defaultModel || model.options[0]?.value || '');
+      const supportsEffort = provider?.capabilities?.effort !== false;
+      $('effort').classList.toggle('hidden', !supportsEffort);
+      document.querySelector('.run-options').classList.toggle('no-effort', !supportsEffort);
+      if (supportsEffort) configureEfforts();
+      $('accessToggle').title = provider?.id === 'codex'
+        ? (state.lang === 'zh' ? '允许 Codex 访问工作区之外的目录' : 'Allow Codex to access paths outside the workspace')
+        : (state.lang === 'zh' ? `允许 ${provider?.name || '代理'} 自动批准权限请求` : `Allow ${provider?.name || 'the agent'} to approve permission requests automatically`);
+    }
+
+    function renderProviderFilter() {
+      const filter = $('providerFilter');
+      filter.replaceChildren();
+      const choices = [{ id: 'all', name: t('all') }, ...state.providers.filter((item) => item.installed)];
+      if (!choices.some((item) => item.id === state.providerFilter)) state.providerFilter = 'all';
+      for (const provider of choices) {
+        const option = document.createElement('option');
+        option.value = provider.id;
+        option.textContent = provider.name;
+        filter.appendChild(option);
+      }
+      filter.value = state.providerFilter;
+    }
+
+    function renderSessionMode() {
+      const mode = $('sessionMode');
+      mode.replaceChildren();
+      mode.setAttribute('aria-label', state.lang === 'zh' ? '任务排列方式' : 'Task arrangement');
+      for (const choice of [{ id: 'projects', label: t('projects') }, { id: 'recent', label: t('recentMode') }]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = choice.label;
+        button.classList.toggle('active', state.sessionMode === choice.id);
+        button.setAttribute('aria-pressed', String(state.sessionMode === choice.id));
+        button.addEventListener('click', () => {
+          state.sessionMode = choice.id;
+          savePreference('remoteLiteSessionMode', choice.id);
+          renderSessionMode();
+          renderSessions();
+        });
+        mode.appendChild(button);
+      }
+    }
+
+    function sessionNode(session, grouped = false) {
+      const button = document.createElement('button');
+      button.className = `session${state.selected?.id === session.id ? ' selected' : ''}`;
+      button.type = 'button';
+      const top = document.createElement('div');
+      top.className = 'session-top';
+      const title = document.createElement('div');
+      title.className = 'session-title';
+      title.textContent = session.title;
+      top.appendChild(title);
+      if (session.pinned) {
+        const pin = document.createElement('span');
+        pin.className = 'pin';
+        pin.textContent = '◆';
+        top.appendChild(pin);
+      }
+      const details = document.createElement('div');
+      details.className = 'session-details';
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      const source = document.createElement('span');
+      source.className = 'chip';
+      source.textContent = state.providers.find((item) => item.id === session.provider)?.name || session.source;
+      source.style.borderLeft = `3px solid ${state.providers.find((item) => item.id === session.provider)?.color || 'var(--line)'}`;
+      chips.appendChild(source);
+      if (!session.cwdExists) {
+        const warning = document.createElement('span');
+        warning.className = 'chip warn';
+        warning.textContent = t('missingDirectory');
+        chips.appendChild(warning);
+      }
+      details.appendChild(chips);
+      if (!grouped) {
+        const path = document.createElement('span');
+        path.className = 'session-path';
+        path.textContent = shortPath(session.cwd);
+        details.appendChild(path);
+      }
+      const time = document.createElement('time');
+      time.className = 'session-time';
+      time.dateTime = session.updatedAt;
+      time.textContent = formatTime(session.updatedAt);
+      details.appendChild(time);
+      button.append(top, details);
+      button.addEventListener('click', () => selectSession(session.id, true));
+      return button;
+    }
+
+    function projectGroupNode(cwd, sessions) {
+      const section = document.createElement('section');
+      section.className = 'project-group';
+      const header = document.createElement('div');
+      header.className = 'project-header';
+      const heading = document.createElement('div');
+      heading.className = 'project-heading';
+      const name = document.createElement('div');
+      name.className = 'project-name';
+      name.textContent = projectName(cwd);
+      const count = document.createElement('span');
+      count.className = 'project-count';
+      count.textContent = t('sessionsCount', { count: sessions.length });
+      heading.append(name, count);
+      header.appendChild(heading);
+      if (cwd) {
+        const path = document.createElement('div');
+        path.className = 'project-path';
+        path.textContent = shortPath(cwd);
+        path.title = cwd;
+        header.appendChild(path);
+      }
+      const rows = document.createElement('div');
+      rows.className = 'project-sessions';
+      for (const session of sessions) rows.appendChild(sessionNode(session, true));
+      section.append(header, rows);
+      return section;
+    }
+
+    function renderSessions() {
+      const list = $('sessionList');
+      list.replaceChildren();
+      const heading = state.sessionMode === 'projects' ? t('projectTasks') : t('recent');
+      if (!state.sessions.length) {
+        $('sessionHeading').textContent = `${heading} · 0`;
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = t('noTasks');
+        list.appendChild(empty);
+        return;
+      }
+      const query = state.sessionSearch.trim().toLocaleLowerCase();
+      const providerSessions = state.providerFilter === 'all' ? state.sessions : state.sessions.filter((item) => item.provider === state.providerFilter);
+      const matches = query
+        ? providerSessions.filter((item) => `${item.title} ${item.cwd} ${item.preview || ''}`.toLocaleLowerCase().includes(query))
+        : providerSessions;
+      const sorted = [...matches].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      const visible = sorted.slice(0, 80);
+      $('sessionHeading').textContent = `${heading} · ${matches.length}`;
+      if (!visible.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = t('noProviderTasks');
+        list.appendChild(empty);
+        return;
+      }
+      if (state.sessionMode === 'projects') {
+        const groups = new Map();
+        for (const session of visible) {
+          const cwd = session.cwd || '';
+          if (!groups.has(cwd)) groups.set(cwd, []);
+          groups.get(cwd).push(session);
+        }
+        for (const [cwd, sessions] of groups) list.appendChild(projectGroupNode(cwd, sessions));
+      } else {
+        const rows = document.createElement('div');
+        rows.className = 'recent-sessions';
+        for (const session of visible) rows.appendChild(sessionNode(session));
+        list.appendChild(rows);
+      }
+      if (matches.length > visible.length) {
+        const more = document.createElement('div');
+        more.className = 'empty';
+        more.textContent = t('showing', { count: visible.length });
+        list.appendChild(more);
+      }
+    }
+
+    async function selectSession(id, openConversation = false, loadConversation = true) {
+      state.selected = state.sessions.find((item) => item.id === id) || null;
+      $('selectedName').textContent = state.selected ? state.selected.title : t('selectTask');
+      $('conversationTitle').textContent = state.selected ? state.selected.title : t('conversation');
+      $('pinButton').disabled = !state.selected;
+      $('pinButton').classList.toggle('hidden', !state.selected);
+      $('pinButton').textContent = state.selected?.pinned ? t('unpin') : t('pin');
+      $('prompt').disabled = !state.selected;
+      $('sendButton').disabled = !state.selected;
+      configureRunOptions();
+      configureWorkspace();
+      renderSessions();
+      if (state.selected && loadConversation) await loadHistory(state.selected.id);
+      if (openConversation) switchView('output');
+    }
+
+    function configureWorkspace(forceOpen = false) {
+      const workspace = $('workspace');
+      const workspacePicker = $('workspacePicker');
+      const workspaceButton = $('workspaceButton');
+      workspace.replaceChildren();
+      workspaceButton.classList.toggle('hidden', !state.selected);
+      if (!state.selected) {
+        workspacePicker.classList.add('hidden');
+        return;
+      }
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = t('chooseWorkspace');
+      workspace.appendChild(placeholder);
+      const choices = [...new Set([state.selected.cwdExists ? state.selected.cwd : '', ...state.projects].filter(Boolean))];
+      for (const project of choices) {
+        const option = document.createElement('option');
+        option.value = project;
+        option.textContent = shortPath(project);
+        workspace.appendChild(option);
+      }
+      workspace.value = state.selected.cwdExists ? state.selected.cwd : '';
+      $('workspacePath').value = state.selected.cwd || '';
+      workspacePicker.classList.toggle('hidden', state.selected.cwdExists && !forceOpen);
+    }
+
+    async function saveWorkspace(cwd) {
+      const sessionId = state.selected?.id;
+      if (!sessionId || !cwd) return;
+      $('workspace').disabled = true;
+      $('workspacePath').disabled = true;
+      $('workspaceSave').disabled = true;
+      try {
+        await api('/api/workspace', {
+          method: 'POST',
+          body: JSON.stringify({ sessionId, cwd }),
+        });
+        await loadSessions(true);
+      } catch (error) {
+        alert(error.message);
+        configureWorkspace(true);
+      } finally {
+        $('workspace').disabled = false;
+        $('workspacePath').disabled = false;
+        $('workspaceSave').disabled = false;
+      }
+    }
+
+    async function loadSessions(refresh = false, preferredId = null, loadConversation = true) {
+      const data = await api(`/api/sessions${refresh ? '?refresh=1' : ''}`);
+      state.sessions = data.sessions;
+      state.projects = data.projects;
+      if (!preferredId && data.activeRun && !state.running) {
+        preferredId = data.activeRun.redirectSessionId || data.activeRun.sessionId;
+      }
+      if (preferredId) state.selected = state.sessions.find((item) => item.id === preferredId) || null;
+      else if (state.selected) state.selected = state.sessions.find((item) => item.id === state.selected.id) || null;
+      if (!state.selected) state.selected = state.sessions.find((item) => item.pinned) || state.sessions[0] || null;
+      renderSessions();
+      if (state.selected) await selectSession(state.selected.id, false, loadConversation);
+      if (data.activeRun && !state.running) {
+        state.runId = data.activeRun.id;
+        state.redirectSessionId = data.activeRun.redirectSessionId || null;
+        setQueueItems(data.activeRun.queue || []);
+        setRunning(true);
+        switchView('output');
+        connectRunEvents(data.activeRun.id);
+      }
+    }
+
+    async function loadHistory(sessionId) {
+      const output = $('output');
+      state.activityGroup = null;
+      output.replaceChildren();
+      const loading = document.createElement('div');
+      loading.className = 'empty';
+      loading.textContent = t('loading');
+      output.appendChild(loading);
+      try {
+        const data = await api(`/api/session/${sessionId}/history`);
+        if (state.selected?.id !== sessionId) return;
+        output.replaceChildren();
+        if (!data.messages.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = t('noConversation');
+          output.appendChild(empty);
+          return;
+        }
+        for (const message of data.messages) {
+          appendEvent({ kind: message.role === 'user' ? 'user' : 'message', text: message.text });
+        }
+      } catch (error) {
+        output.replaceChildren();
+        appendEvent({ kind: 'error', text: error.message });
+      }
+    }
+
+    function switchView(name) {
+      document.querySelectorAll('.tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.view === name));
+      $('sessionsView').classList.toggle('hidden', name !== 'sessions');
+      $('outputView').classList.toggle('hidden', name !== 'output');
+      document.querySelector('.composer').classList.toggle('hidden', name !== 'output');
+      $('app').classList.toggle('composing', name === 'output');
+    }
+
+    function renderMarkdown(text) {
+      const content = document.createElement('div');
+      content.className = 'markdown';
+      if (!window.marked?.parse || !window.DOMPurify?.sanitize) {
+        content.textContent = text;
+        return content;
+      }
+      const html = window.marked.parse(String(text), { gfm: true, breaks: true, async: false });
+      content.innerHTML = window.DOMPurify.sanitize(html);
+      content.querySelectorAll('a').forEach((link) => {
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+      });
+      return content;
+    }
+
+    function updateActivitySummary(group, complete = false) {
+      group.complete = complete || group.complete;
+      group.title.textContent = group.complete ? t('processed') : t('processing');
+      group.count.textContent = t('items', { count: group.items });
+    }
+
+    function ensureActivityGroup(output) {
+      if (state.activityGroup) return state.activityGroup;
+      const details = document.createElement('details');
+      details.className = 'event activity-group';
+      const summary = document.createElement('summary');
+      const title = document.createElement('span');
+      title.className = 'activity-group-title';
+      const count = document.createElement('span');
+      count.className = 'activity-group-count';
+      const list = document.createElement('div');
+      list.className = 'activity-list';
+      summary.append(title, count);
+      details.append(summary, list);
+      output.appendChild(details);
+      state.activityGroup = { details, title, count, list, items: 0, complete: false, answered: false };
+      updateActivitySummary(state.activityGroup);
+      return state.activityGroup;
+    }
+
+    function appendActivity(event, output) {
+      if (event.kind === 'status' && state.activityGroup?.answered) state.activityGroup = null;
+      const group = ensureActivityGroup(output);
+      const row = document.createElement('div');
+      row.className = 'activity-row';
+      if (event.kind === 'status') {
+        row.textContent = localizeServerText(event.text || event.title || t('working'));
+      } else {
+        const details = document.createElement('details');
+        details.className = 'activity-details';
+        const summary = document.createElement('summary');
+        const label = document.createElement('span');
+        label.className = 'activity-label';
+        label.textContent = event.title || (event.kind === 'reasoning' ? t('reasoning') : t('tool'));
+        summary.appendChild(label);
+        if (event.status) {
+          const status = document.createElement('span');
+          status.className = 'activity-status';
+          status.textContent = event.status;
+          summary.appendChild(status);
+        }
+        details.appendChild(summary);
+        if (event.text) {
+          const body = document.createElement('div');
+          body.className = 'activity-body';
+          body.appendChild(event.kind === 'reasoning' ? renderMarkdown(event.text) : document.createTextNode(event.text));
+          details.appendChild(body);
+        }
+        row.appendChild(details);
+      }
+      group.list.appendChild(row);
+      group.items += 1;
+      updateActivitySummary(group);
+      return group.details;
+    }
+
+    function appendEvent(event) {
+      if (event.text && (event.kind === 'status' || event.kind === 'complete' || event.kind === 'error')) event.text = localizeServerText(event.text);
+      if (event.kind === 'queue') {
+        applyQueueEvent(event);
+        return;
+      }
+      const output = $('output');
+      if (output.querySelector('.empty')) output.replaceChildren();
+      const isActivity = event.kind === 'status' || event.kind === 'tool' || event.kind === 'reasoning';
+      if (isActivity) {
+        const activity = appendActivity(event, output);
+        if (!$('outputView').classList.contains('hidden')) activity.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        if (event.sessionId) state.redirectSessionId = event.sessionId;
+        return;
+      }
+      if (event.kind === 'complete') {
+        if (state.activityGroup) updateActivitySummary(state.activityGroup, true);
+        if (event.sessionId) state.redirectSessionId = event.sessionId;
+        if (event.done) finishRun();
+        return;
+      }
+      const block = document.createElement('div');
+      block.className = `event ${event.kind || 'status'}`;
+      if (event.title) {
+        const title = document.createElement('span');
+        title.className = 'event-title';
+        title.textContent = event.title;
+        block.appendChild(title);
+      }
+      if (event.text) {
+        const markdownKinds = new Set(['message', 'user']);
+        block.appendChild(markdownKinds.has(event.kind) ? renderMarkdown(event.text) : document.createTextNode(event.text));
+      }
+      output.appendChild(block);
+      if (event.kind === 'message' && state.activityGroup) {
+        state.activityGroup.answered = true;
+        updateActivitySummary(state.activityGroup, true);
+      }
+      if (!$('outputView').classList.contains('hidden')) block.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      if (event.sessionId) state.redirectSessionId = event.sessionId;
+      if (event.done) finishRun();
+    }
+
+    function setRunning(value) {
+      state.running = value;
+      $('runningDot').classList.toggle('hidden', !value);
+      $('stopButton').classList.toggle('hidden', !value);
+      document.querySelector('.compose-row').classList.toggle('running', value);
+      $('prompt').disabled = !state.selected;
+      $('sendButton').disabled = !state.selected;
+      $('sendButton').textContent = '↑';
+      $('prompt').placeholder = value ? t('freeInput') : t('input');
+      $('sendButton').title = value ? t('enqueue') : t('send');
+      $('sendButton').setAttribute('aria-label', value ? t('enqueue') : t('send'));
+      $('runState').textContent = value ? t('running') : '';
+    }
+
+    function setQueueItems(items) {
+      state.queueItems = new Map(items.map((item) => [item.id, item]));
+      renderQueue();
+    }
+
+    function applyQueueEvent(event) {
+      const item = event.queueItem;
+      if (!item?.id) return;
+      if (event.action === 'removed') state.queueItems.delete(item.id);
+      else state.queueItems.set(item.id, item);
+      renderQueue();
+    }
+
+    function queueButton(label, className, title, action) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `queue-action ${className}`;
+      button.textContent = label;
+      button.title = title;
+      button.setAttribute('aria-label', title);
+      button.addEventListener('click', action);
+      return button;
+    }
+
+    function renderQueue() {
+      const list = $('queueList');
+      list.replaceChildren();
+      list.classList.toggle('hidden', !state.queueItems.size);
+      for (const item of state.queueItems.values()) {
+        const row = document.createElement('div');
+        row.className = 'queue-item';
+        const text = document.createElement('div');
+        text.className = 'queue-prompt';
+        text.textContent = item.prompt;
+        text.title = item.prompt;
+        const steer = queueButton(t('steer'), 'queue-steer', t('steer'), async () => {
+          try { await api(`/api/queue/${state.runId}/${item.id}/steer`, { method: 'POST' }); }
+          catch (error) { alert(error.message); }
+        });
+        const remove = queueButton('×', 'queue-delete', t('remove'), async () => {
+          try { await api(`/api/queue/${state.runId}/${item.id}`, { method: 'DELETE' }); }
+          catch (error) { alert(error.message); }
+        });
+        const edit = queueButton('…', 'queue-edit', t('edit'), async () => {
+          const prompt = window.prompt(t('editQueued'), item.prompt)?.trim();
+          if (!prompt || prompt === item.prompt) return;
+          try { await api(`/api/queue/${state.runId}/${item.id}`, { method: 'PATCH', body: JSON.stringify({ prompt }) }); }
+          catch (error) { alert(error.message); }
+        });
+        const provider = state.providers.find((entry) => entry.id === state.selected?.provider);
+        row.append(text);
+        if (provider?.capabilities?.steer) row.append(steer);
+        row.append(remove, edit);
+        list.appendChild(row);
+      }
+    }
+
+    async function finishRun() {
+      state.source?.close();
+      state.source = null;
+      state.lastEventId = 0;
+      setQueueItems([]);
+      setRunning(false);
+      const preferredId = state.redirectSessionId;
+      state.redirectSessionId = null;
+      await loadSessions(true, preferredId, false).catch(() => {});
+    }
+
+    function connectRunEvents(runId) {
+      state.source?.close();
+      const source = new EventSource(`/api/events/${runId}?after=${state.lastEventId}`);
+      state.source = source;
+      source.onopen = () => {
+        if (state.running && state.source === source) $('runState').textContent = t('running');
+      };
+      source.onmessage = (message) => {
+        if (state.source === source) {
+          state.lastEventId = Number(message.lastEventId) || state.lastEventId;
+          appendEvent(JSON.parse(message.data));
+        }
+      };
+      source.onerror = () => {
+        if (state.running && state.source === source) $('runState').textContent = t('reconnecting');
+      };
+    }
+
+    async function startRun() {
+      const prompt = $('prompt').value.trim();
+      if (!state.selected || !prompt) return;
+      if (state.running) {
+        try {
+          const data = await api(`/api/message/${state.runId}`, {
+            method: 'POST',
+            body: JSON.stringify({ prompt }),
+          });
+          if (state.running && data.queueItem) {
+            state.queueItems.set(data.queueItem.id, data.queueItem);
+            renderQueue();
+          }
+          $('prompt').value = '';
+        } catch (error) {
+          appendEvent({ kind: 'error', text: error.message });
+        }
+        return;
+      }
+      state.redirectSessionId = null;
+      state.lastEventId = 0;
+      state.activityGroup = null;
+      const cwd = state.selected.cwdExists ? state.selected.cwd : $('workspacePath').value.trim() || $('workspace').value;
+      if (!cwd) return alert(t('workspaceRequired'));
+      switchView('output');
+      setRunning(true);
+      appendEvent({ kind: 'user', text: prompt });
+      try {
+        const data = await api('/api/run', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: state.selected.id,
+            prompt,
+            cwd,
+            model: $('model').value,
+            effort: $('effort').value,
+            fullAccess: $('fullAccess').checked,
+          }),
+        });
+        state.runId = data.runId;
+        $('prompt').value = '';
+        connectRunEvents(data.runId);
+      } catch (error) {
+        appendEvent({ kind: 'error', text: error.message, done: true });
+      }
+    }
+
+    async function stopRun() {
+      if (!state.runId) return;
+      try { await api(`/api/stop/${state.runId}`, { method: 'POST' }); } catch (error) { alert(error.message); }
+    }
+
+    $('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      $('loginError').textContent = '';
+      try {
+        await api('/api/login', { method: 'POST', body: JSON.stringify({ password: $('password').value }) });
+        $('password').value = '';
+        showApp();
+        await loadOptions();
+        await loadSessions(true);
+      } catch (error) { $('loginError').textContent = error.message; }
+    });
+    $('logoutButton').addEventListener('click', async () => { await api('/api/logout', { method: 'POST' }); showLogin(); });
+    function toggleLanguage() {
+      state.lang = state.lang === 'zh' ? 'en' : 'zh';
+      try { localStorage.setItem('remoteLiteLanguage', state.lang); } catch {}
+      applyLanguage();
+    }
+    $('languageButton').addEventListener('click', toggleLanguage);
+    $('loginLanguageButton').addEventListener('click', toggleLanguage);
+    $('refreshButton').addEventListener('click', () => loadSessions(true));
+    $('sessionSearch').addEventListener('input', () => {
+      state.sessionSearch = $('sessionSearch').value;
+      renderSessions();
+    });
+    $('providerFilter').addEventListener('change', () => {
+      state.providerFilter = $('providerFilter').value;
+      renderSessions();
+    });
+    $('model').addEventListener('change', () => {
+      savePreference(`remoteLiteModel:${state.selected?.provider}`, $('model').value);
+      configureEfforts();
+      savePreference(`remoteLiteEffort:${state.selected?.provider}`, $('effort').value);
+    });
+    $('effort').addEventListener('change', () => savePreference(`remoteLiteEffort:${state.selected?.provider}`, $('effort').value));
+    $('fullAccess').addEventListener('change', () => savePreference('remoteLiteFullAccess', String($('fullAccess').checked)));
+    $('workspaceButton').addEventListener('click', () => {
+      if (!state.selected) return;
+      const workspacePicker = $('workspacePicker');
+      if (workspacePicker.classList.contains('hidden')) configureWorkspace(true);
+      else workspacePicker.classList.add('hidden');
+    });
+    $('workspace').addEventListener('change', async () => {
+      const cwd = $('workspace').value;
+      if (!cwd) return;
+      $('workspacePath').value = cwd;
+      await saveWorkspace(cwd);
+    });
+    $('workspaceSave').addEventListener('click', () => saveWorkspace($('workspacePath').value.trim()));
+    $('workspacePath').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveWorkspace($('workspacePath').value.trim());
+      }
+    });
+    $('pinButton').addEventListener('click', async () => {
+      if (!state.selected) return;
+      await api('/api/pin', { method: 'POST', body: JSON.stringify({ sessionId: state.selected.pinned ? null : state.selected.id }) });
+      await loadSessions(true);
+    });
+    $('sendButton').addEventListener('click', startRun);
+    $('stopButton').addEventListener('click', stopRun);
+    $('prompt').addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') startRun();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.running && state.runId && (!state.source || state.source.readyState === EventSource.CLOSED)) {
+        connectRunEvents(state.runId);
+      }
+    });
+    document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => switchView(tab.dataset.view)));
+
+    const composer = document.querySelector('.composer');
+    const syncComposerHeight = () => document.documentElement.style.setProperty('--composer-height', `${composer.offsetHeight}px`);
+    if (window.ResizeObserver) new ResizeObserver(syncComposerHeight).observe(composer);
+    window.addEventListener('resize', syncComposerHeight);
+    syncComposerHeight();
+
+    applyLanguage();
+    api('/api/auth').then(async ({ authenticated }) => {
+      if (!authenticated) return showLogin();
+      showApp();
+      await loadOptions();
+      await loadSessions();
+    }).catch(showLogin);
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "agent-remote-console",
+  "version": "0.2.0",
+  "description": "A self-hosted, mobile-first web console for local Codex, Claude Code, and OpenCode sessions.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fadeoreo/agent-remote-console.git"
+  },
+  "homepage": "https://github.com/fadeoreo/agent-remote-console#readme",
+  "bugs": {
+    "url": "https://github.com/fadeoreo/agent-remote-console/issues"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "type": "module",
+  "scripts": {
+    "deploy": "node scripts/deploy.mjs",
+    "check": "node --check server.mjs && node --check lib/*.mjs && node --check scripts/*.mjs",
+    "password": "node scripts/hash-password.mjs",
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "keywords": [
+    "coding-agent",
+    "codex",
+    "claude-code",
+    "opencode",
+    "self-hosted",
+    "remote-control"
+  ],
+  "dependencies": {
+    "dompurify": "^3.4.13",
+    "marked": "^18.0.9"
+  }
+}
