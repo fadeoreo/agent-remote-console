@@ -29,7 +29,7 @@ Agent Remote Console 把电脑上的 coding-agent CLI 变成可以远程调度�
 
 ## 60 秒启动
 
-要求：macOS 或 Linux、Node.js 22.5+，并确保至少一个受支持的 CLI 已经位于 `PATH`。
+要求：macOS 或 Linux、Node.js 22.5+，并确保至少一个受支持的 CLI 已经位于 `PATH`。Windows 用户请使用下方的 WSL2 方案；该方案尚未完成端到端实机验证。
 
 ```bash
 git clone https://github.com/fadeoreo/agent-remote-console.git
@@ -46,6 +46,37 @@ HOST=100.x.y.z PORT=3001 REMOTE_PASSWORD='设置一个强密码' pnpm start
 ```
 
 将 `100.x.y.z` 替换为主机的 Tailscale 或私有 VPN 地址，手机也必须连接同一个 tailnet 或 VPN。可以运行 `tailscale ip -4` 查看电脑的 Tailscale IPv4 地址。没有额外安全层时，请勿监听公网地址。
+
+## Windows：使用 WSL2
+
+Windows 目前推荐的实验运行方式是 WSL2；原生 Windows 当前不受支持，也没有经过测试。Agent Remote Console、各 Provider CLI、CLI 登录状态和代码仓库都应放在同一个 WSL2 发行版中。这样 Session 发现、Unix 进程行为、文件权限和 CLI 路径才能与 Linux 部署保持一致。
+
+先在管理员 PowerShell 中运行：
+
+```powershell
+wsl --install -d Ubuntu
+wsl --update
+wsl -d Ubuntu
+```
+
+然后在 WSL 终端中安装 Node.js 22.5+ 和需要使用的 coding-agent CLI，在 WSL 内完成这些 CLI 的登录，再安装 Agent Remote Console：
+
+```bash
+mkdir -p ~/code && cd ~/code
+git clone https://github.com/fadeoreo/agent-remote-console.git
+cd agent-remote-console
+corepack enable
+pnpm install
+REMOTE_PASSWORD='设置一个强密码' pnpm start
+```
+
+先在 WSL 内运行 `curl http://127.0.0.1:3001/api/health` 检查服务，再从 Windows 浏览器打开 `http://localhost:3001`。如果无法访问，请检查 WSL 是否启用了 localhost 转发。
+
+手机或远程 Agent 访问时，目前记录的方案是在同一个 WSL2 发行版内运行 Tailscale，并在 WSL 终端中执行下方的 Tailscale 配置。如果 Tailscale 只安装在 Windows 宿主机，则还需要配置宿主机到 WSL 的端口转发和 Windows 防火墙；本项目尚未验证这种拓扑。
+
+代码仓库应放在 WSL 文件系统中，例如 `~/code/project`，不要放在 `/mnt/c/...`。这样可以避免较慢的 I/O，以及常见的权限、软链接和文件监听问题。Codex、Claude Code、OpenCode 也应安装并登录在 WSL 内；不要让 WSL 中的控制台读取 Windows 原生 CLI 的 Session 数据。
+
+Codex 本身同时支持原生 Windows 和 WSL2，但 Agent Remote Console 当前不支持原生 Windows。原生支持还需要专门实现并测试 `.cmd` 可执行文件发现、Provider 数据目录、进程终止和 Windows 服务安装。当前版本的 Codex 不支持 WSL1。参见官方 [Codex WSL 指南](https://learn.chatgpt.com/docs/windows/wsl)。
 
 ## 推荐方案：搭配 Tailscale
 
@@ -200,6 +231,12 @@ REMOTE_PASSWORD_HASH='命令生成的salt:hash' pnpm start
 
 未设置密码变量时，Agent Remote Console 每次启动都会生成一个随机密码并只在终端输出一次，不存在内置默认密码。
 
+## 部署说明
+
+`pnpm deploy` 只用于更新已有的 macOS LaunchAgent 安装，不负责首次安装，也不适用于 Linux、WSL2 或原生 Windows。
+
+目前 Linux 和 WSL2 用户应以前台方式运行 `pnpm start`，或自行配置系统服务。首个稳定版本发布前，项目会补齐 macOS、Linux 和 WSL2 的安装、卸载及真实环境验证。
+
 ## 安全边界
 
 - 只面向一个可信用户和可信私网。
@@ -222,7 +259,8 @@ pnpm test
 
 ## 路线图
 
-- 完整的 macOS/Linux 服务安装和卸载流程。
+- 完成 macOS、Linux 和 WSL2 的服务安装、卸载及验证。
+- 实现并验证原生 Windows 的进程、路径和服务支持。
 - 三个 CLI 的版本化真实兼容矩阵。
 - 将 Codex app-server 逻辑完整移入 Provider 边界。
 - 自动化响应式截图和端到端浏览器测试。

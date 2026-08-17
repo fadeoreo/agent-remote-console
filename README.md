@@ -29,7 +29,7 @@ This makes a useful two-level agent system: a third-party API agent can plan or 
 
 ## Quick Start
 
-Requirements: macOS or Linux, Node.js 22.5+, and at least one supported CLI on `PATH`.
+Requirements: macOS or Linux, Node.js 22.5+, and at least one supported CLI on `PATH`. Windows users should follow the WSL2 path below; its end-to-end verification is still pending.
 
 ```bash
 git clone https://github.com/fadeoreo/agent-remote-console.git
@@ -46,6 +46,37 @@ HOST=100.x.y.z PORT=3001 REMOTE_PASSWORD='choose-a-strong-password' pnpm start
 ```
 
 Replace `100.x.y.z` with the host's Tailscale or private VPN address. The phone must be connected to the same tailnet or VPN. You can find the host's Tailscale IPv4 address with `tailscale ip -4`. Do not bind Agent Remote Console to a public interface without an external security layer.
+
+## Windows: Use WSL2
+
+WSL2 is the recommended experimental Windows path. Native Windows is currently unsupported and untested. Run Agent Remote Console, the provider CLIs, their authentication, and your repositories inside the same WSL2 distribution. This keeps session discovery, Unix process behavior, file permissions, and CLI paths aligned with the Linux deployment.
+
+From an elevated PowerShell terminal:
+
+```powershell
+wsl --install -d Ubuntu
+wsl --update
+wsl -d Ubuntu
+```
+
+Then, from the WSL shell, install Node.js 22.5+ and the coding-agent CLIs you intend to use, authenticate those CLIs inside WSL, and install Agent Remote Console:
+
+```bash
+mkdir -p ~/code && cd ~/code
+git clone https://github.com/fadeoreo/agent-remote-console.git
+cd agent-remote-console
+corepack enable
+pnpm install
+REMOTE_PASSWORD='choose-a-strong-password' pnpm start
+```
+
+Verify the service inside WSL with `curl http://127.0.0.1:3001/api/health`, then open `http://localhost:3001` from Windows. If that URL does not work, check that WSL localhost forwarding is enabled.
+
+For phone or remote-agent access, the documented path is to run Tailscale inside the same WSL2 distribution and use the Tailscale setup below from the WSL shell. If Tailscale runs only on the Windows host, host-to-WSL forwarding and Windows Firewall configuration are also required; that topology has not been validated by this project.
+
+Keep repositories under the WSL filesystem, such as `~/code/project`, rather than `/mnt/c/...`. This avoids slower I/O and common permission, symlink, and file-watcher problems. Install and authenticate Codex, Claude Code, and OpenCode inside WSL as well; do not mix Windows-native session data with a WSL-hosted console.
+
+Codex itself supports both native Windows and WSL2, but Agent Remote Console does not currently support native Windows. Native support needs dedicated implementation and testing for `.cmd` executable discovery, provider data locations, process termination, and Windows service installation. WSL1 is not supported by current Codex versions. See the official [Codex WSL guide](https://learn.chatgpt.com/docs/windows/wsl).
 
 ## Recommended Setup: Tailscale
 
@@ -208,7 +239,7 @@ If neither password variable is set, Agent Remote Console generates a random pas
 
 `pnpm deploy` updates an existing macOS LaunchAgent installation and waits for an active turn before restarting. It does not install the LaunchAgent. The deployment directory and service label still use the legacy `codex-remote-lite` name so existing installations continue to upgrade safely.
 
-For now, Linux users should run the same `pnpm start` command from their preferred service manager. Complete install/uninstall commands for macOS and Linux are planned before the first stable release.
+`pnpm deploy` is not available on Linux, WSL2, or native Windows. For now, Linux and WSL2 users should run `pnpm start` in the foreground or configure their own service manager. Complete install/uninstall commands for macOS, Linux, and WSL2 are planned before the first stable release.
 
 ## Security Boundary
 
@@ -232,7 +263,8 @@ The browser UI intentionally has no build step. Provider behavior belongs in `li
 
 ## Roadmap
 
-- Complete macOS and Linux service installation.
+- Complete macOS, Linux, and WSL2 service installation and verification.
+- Add and verify a native Windows process, path, and service implementation.
 - Add a versioned live compatibility matrix for all three CLIs.
 - Move Codex-specific app-server behavior behind the provider boundary.
 - Add automated responsive screenshots and end-to-end browser tests.
