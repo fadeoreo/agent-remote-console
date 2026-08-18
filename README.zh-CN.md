@@ -17,6 +17,8 @@
 
 Agent Remote Console 把电脑上的 coding-agent CLI 变成可以远程调度的执行者。任务仍由本机 CLI 使用已有登录状态、文件系统、终端和工具能力完成。
 
+它不是官方 Provider 客户端的替代品，而是补上它们之间没有统一解决的控制平面：用一个私有界面管理已有的 Codex、Claude Code 和 OpenCode Session，并通过 HTTP/SSE 让其他 Agent 或自动化服务调度这台电脑。Provider 凭据不需要搬到云端，也不代理 API Key。
+
 ## 本地 Agent 的远程控制平面
 
 | 控制方 | 可以通过 Agent Remote Console 完成什么 |

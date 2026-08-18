@@ -17,6 +17,8 @@ A self-hosted, mobile-first console that finds your existing coding-agent sessio
 
 Agent Remote Console turns the coding-agent CLIs on your computer into remotely controllable workers. The work still runs locally with each CLI's existing login, filesystem, terminal, and tool access.
 
+This complements, rather than replaces, official provider clients. The opportunity is the control-plane layer they do not share: one private interface for existing Codex, Claude Code, and OpenCode sessions, plus an HTTP/SSE bridge that lets another agent or automation service dispatch work to the computer. It does not require moving provider credentials to the cloud or proxying API keys.
+
 ## A Remote Control Plane for Local Agents
 
 | Controller | What it can do through Agent Remote Console |
