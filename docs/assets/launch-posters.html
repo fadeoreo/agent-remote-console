@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Remote Console Launch Posters</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 1080px; height: 1440px; overflow: hidden; }
+    body {
+      color: #171917;
+      background: #f4f5f1;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+    .poster { display: none; width: 1080px; height: 1440px; padding: 72px 76px 64px; position: relative; }
+    body[data-slide="1"] .slide-1,
+    body[data-slide="2"] .slide-2,
+    body[data-slide="3"] .slide-3 { display: block; }
+    .brand { display: flex; align-items: center; gap: 18px; font-size: 24px; font-weight: 750; }
+    .mark { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 8px; color: #fff; background: #171917; font-size: 20px; }
+    .eyebrow { margin-top: 66px; color: #147a58; font-size: 24px; font-weight: 750; }
+    h1 { margin: 18px 0 0; max-width: 900px; font-size: 92px; line-height: 1.08; font-weight: 850; letter-spacing: 0; }
+    .lead { margin: 28px 0 0; max-width: 850px; color: #4c514d; font-size: 34px; line-height: 1.5; font-weight: 520; }
+    .footer { position: absolute; left: 76px; right: 76px; bottom: 52px; display: flex; justify-content: space-between; color: #5d625e; font-size: 22px; }
+    .screenshot {
+      margin-top: 52px;
+      height: 560px;
+      overflow: hidden;
+      border: 1px solid #cfd4ce;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 22px 60px rgba(23, 25, 23, .12);
+    }
+    .screenshot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+    .provider-list { margin-top: 58px; border-top: 1px solid #c8cdc7; }
+    .provider { min-height: 160px; display: grid; grid-template-columns: 82px 1fr auto; align-items: center; gap: 24px; border-bottom: 1px solid #c8cdc7; }
+    .provider-dot { width: 54px; height: 54px; border-radius: 50%; }
+    .provider:nth-child(1) .provider-dot { background: #147a58; }
+    .provider:nth-child(2) .provider-dot { background: #c95236; }
+    .provider:nth-child(3) .provider-dot { background: #376f9f; }
+    .provider-name { font-size: 43px; font-weight: 780; }
+    .provider-desc { margin-top: 8px; color: #5a605b; font-size: 25px; }
+    .provider-state { padding: 12px 16px; border: 1px solid #aeb5ae; border-radius: 6px; font-size: 21px; font-weight: 700; }
+    .note { margin-top: 42px; display: flex; gap: 18px; align-items: flex-start; color: #414642; font-size: 27px; line-height: 1.55; }
+    .note-bullet { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 14px; background: #e5a03c; }
+    .flow { margin-top: 70px; }
+    .flow-node { display: flex; align-items: center; min-height: 128px; padding: 28px 32px; border: 1px solid #bbc1ba; border-radius: 8px; background: #fff; }
+    .flow-icon { display: grid; place-items: center; width: 66px; height: 66px; margin-right: 24px; border-radius: 8px; color: #fff; background: #171917; font-size: 26px; font-weight: 800; }
+    .flow-title { font-size: 34px; font-weight: 780; }
+    .flow-desc { margin-top: 5px; color: #626762; font-size: 22px; }
+    .flow-arrow { height: 54px; margin-left: 62px; border-left: 3px solid #147a58; }
+    .security { margin-top: 42px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .security-item { min-height: 112px; padding: 22px; border-top: 5px solid #147a58; background: #e8eee9; font-size: 23px; line-height: 1.4; font-weight: 680; }
+  </style>
+</head>
+<body>
+  <section class="poster slide-1">
+    <div class="brand"><span class="mark">ARC</span><span>Agent Remote Console</span></div>
+    <div class="eyebrow">开源 · 自托管 · 私网访问</div>
+    <h1>下班了，<br>Agent 还在干活</h1>
+    <p class="lead">从手机继续电脑上的 Codex、Claude Code 和 OpenCode 任务。</p>
+    <div class="screenshot"><img src="agent-remote-console-workspaces.jpg" alt="Workspace session tree"></div>
+    <div class="footer"><span>手机只是控制面板，任务仍在本机运行</span><span>github.com/fadeoreo/agent-remote-console</span></div>
+  </section>
+
+  <section class="poster slide-2">
+    <div class="brand"><span class="mark">ARC</span><span>Agent Remote Console</span></div>
+    <div class="eyebrow">一个中立的本地 Agent 控制平面</div>
+    <h1>一个控制台，<br>管三种 Agent</h1>
+    <div class="provider-list">
+      <div class="provider"><span class="provider-dot"></span><div><div class="provider-name">Codex</div><div class="provider-desc">恢复 Session · 实时引导 · 后续队列</div></div><span class="provider-state">本机 CLI</span></div>
+      <div class="provider"><span class="provider-dot"></span><div><div class="provider-name">Claude Code</div><div class="provider-desc">发现历史 · 原目录继续 · 流式事件</div></div><span class="provider-state">本机 CLI</span></div>
+      <div class="provider"><span class="provider-dot"></span><div><div class="provider-name">OpenCode</div><div class="provider-desc">按目录聚合 · 模型发现 · 顺序执行</div></div><span class="provider-state">本机 CLI</span></div>
+    </div>
+    <div class="note"><span class="note-bullet"></span><span>电脑上没安装的 Provider 不会出现在界面里。每个 CLI 继续使用自己的本地登录状态。</span></div>
+    <div class="footer"><span>Provider-neutral · HTTP/SSE</span><span>github.com/fadeoreo/agent-remote-console</span></div>
+  </section>
+
+  <section class="poster slide-3">
+    <div class="brand"><span class="mark">ARC</span><span>Agent Remote Console</span></div>
+    <div class="eyebrow">不做云端套壳</div>
+    <h1>任务留在本机，<br>手机只是控制面板</h1>
+    <div class="flow">
+      <div class="flow-node"><span class="flow-icon">1</span><div><div class="flow-title">手机 / 浏览器 / 远程 Agent</div><div class="flow-desc">发送指令、查看进度、停止任务</div></div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node"><span class="flow-icon">2</span><div><div class="flow-title">Tailscale 私网</div><div class="flow-desc">不把控制台直接暴露到公网</div></div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node"><span class="flow-icon">3</span><div><div class="flow-title">电脑上的 Coding Agent</div><div class="flow-desc">使用本机仓库、登录状态和工具链执行</div></div></div>
+    </div>
+    <div class="security"><div class="security-item">不代理<br>API Key</div><div class="security-item">不迁移<br>本地 Session</div><div class="security-item">完全访问<br>必须显式开启</div></div>
+    <div class="footer"><span>单用户 · 自托管 · 可信私网</span><span>github.com/fadeoreo/agent-remote-console</span></div>
+  </section>
+  <script>
+    const slide = new URLSearchParams(location.search).get('slide') || '1';
+    document.body.dataset.slide = slide;
+  </script>
+</body>
+</html>

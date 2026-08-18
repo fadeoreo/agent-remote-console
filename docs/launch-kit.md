@@ -136,3 +136,12 @@ Private control plane for local coding agents. Codex · Claude Code · OpenCode 
 - Include the tested CLI version when showing a live run.
 - Redact usernames, absolute paths, session IDs, prompts, repository names, and credentials from screenshots.
 - Reply to installation and compatibility questions with facts and links, not hype.
+
+## Ready-to-post Assets
+
+- [XHS cover: after work](assets/launch-xhs-1.png)
+- [XHS slide: three providers](assets/launch-xhs-2.png)
+- [XHS slide: private control plane](assets/launch-xhs-3.png)
+- [Editable poster source](assets/launch-posters.html)
+
+The three launch images are `1080x1440` PNG files and use sanitized example workspaces and sessions.
