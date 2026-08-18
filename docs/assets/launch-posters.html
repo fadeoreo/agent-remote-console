@@ -16,7 +16,8 @@
     .poster { display: none; width: 1080px; height: 1440px; padding: 72px 76px 64px; position: relative; }
     body[data-slide="1"] .slide-1,
     body[data-slide="2"] .slide-2,
-    body[data-slide="3"] .slide-3 { display: block; }
+    body[data-slide="3"] .slide-3,
+    body[data-slide="4"] .slide-4 { display: block; }
     .brand { display: flex; align-items: center; gap: 18px; font-size: 24px; font-weight: 750; }
     .mark { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 8px; color: #fff; background: #171917; font-size: 20px; }
     .eyebrow { margin-top: 66px; color: #147a58; font-size: 24px; font-weight: 750; }
@@ -90,6 +91,15 @@
     </div>
     <div class="security"><div class="security-item">不代理<br>API Key</div><div class="security-item">不迁移<br>本地 Session</div><div class="security-item">完全访问<br>必须显式开启</div></div>
     <div class="footer"><span>单用户 · 自托管 · 可信私网</span><span>github.com/fadeoreo/agent-remote-console</span></div>
+  </section>
+
+  <section class="poster slide-4" lang="en">
+    <div class="brand"><span class="mark">ARC</span><span>Agent Remote Console</span></div>
+    <div class="eyebrow">OPEN SOURCE · SELF-HOSTED · PRIVATE NETWORK</div>
+    <h1>Your agents stay local.<br>Your browser takes control.</h1>
+    <p class="lead">Resume Codex, Claude Code, and OpenCode sessions from your phone.</p>
+    <div class="screenshot"><img src="agent-remote-console-workspaces.jpg" alt="Workspace session tree"></div>
+    <div class="footer"><span>Local execution · Private control plane</span><span>github.com/fadeoreo/agent-remote-console</span></div>
   </section>
   <script>
     const slide = new URLSearchParams(location.search).get('slide') || '1';

@@ -142,6 +142,7 @@ Private control plane for local coding agents. Codex · Claude Code · OpenCode 
 - [XHS cover: after work](assets/launch-xhs-1.png)
 - [XHS slide: three providers](assets/launch-xhs-2.png)
 - [XHS slide: private control plane](assets/launch-xhs-3.png)
+- [X launch cover: English](assets/launch-x-en.png)
 - [Editable poster source](assets/launch-posters.html)
 
 The three launch images are `1080x1440` PNG files and use sanitized example workspaces and sessions.
