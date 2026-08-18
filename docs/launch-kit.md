@@ -50,6 +50,13 @@ Feedback on CLI versions, WSL2, Tailscale, and provider compatibility is welcome
 
 我给本机 Coding Agent 做了一个手机控制台
 
+可轮换标题：
+
+- 牛马人的远程开发工具：手机继续本机 Codex 任务
+- 下班了，但我的 Coding Agent 还在电脑上干活
+- 不做云端套壳，我给本机 Agent 接了个私有控制台
+- Codex、Claude Code、OpenCode 终于能从手机统一看了
+
 ### 正文
 
 离开电脑以后，Codex、Claude Code、OpenCode 正在跑的任务怎么办？
@@ -70,6 +77,26 @@ Feedback on CLI versions, WSL2, Tailscale, and provider compatibility is welcome
 https://github.com/fadeoreo/agent-remote-console
 
 建议配图：一张桌面工作目录树、一张 1080×1920 手机执行中页面、一张“手机 → Tailscale → 本机 Agent”的架构图。
+
+### 小红书标签
+
+每篇选择 5-8 个，按内容轮换，不要把整组标签一次性全部堆上去：
+
+**核心搜索词：** `#AI编程` `#编程工具` `#开发者工具` `#效率工具` `#远程开发`
+
+**Provider 词：** `#Codex` `#ClaudeCode` `#OpenCode` `#AI代码助手`
+
+**场景词：** `#独立开发者` `#程序员日常` `#自托管` `#Tailscale` `#在家办公`
+
+**情绪/传播词：** `#牛马工具` `#牛马人的自救` `#下班后也能干活` `#打工人效率`
+
+推荐组合：
+
+```text
+#AI编程 #Codex #远程开发 #开发者工具 #自托管 #牛马工具
+```
+
+不要使用“官方 Codex”“远程控制电脑的一切”“完全自动化”等容易造成误解的标签或表述。`#牛马工具`适合做轻松的传播入口，正文仍然要把本地运行、私网访问和安全边界讲清楚。
 
 ## Reddit / Hacker News
 
