@@ -6,7 +6,7 @@
 
 A self-hosted, mobile-first console that finds your existing coding-agent sessions, groups them by workspace, resumes them in context, and streams progress live. No cloud account or API-key proxy required.
 
-[中文文档](README.zh-CN.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
+[中文文档](README.zh-CN.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Launch Kit](docs/launch-kit.md)
 
 </div>
 

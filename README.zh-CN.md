@@ -6,7 +6,7 @@
 
 一个移动端优先的自托管控制台：发现已有任务、按工作目录聚合、带上下文继续执行，并实时返回进度。无需云端账户，也不代理 API Key。
 
-[English](README.md) · [安全说明](SECURITY.md) · [参与贡献](CONTRIBUTING.md)
+[English](README.md) · [安全说明](SECURITY.md) · [参与贡献](CONTRIBUTING.md) · [发布文案](docs/launch-kit.md)
 
 </div>
 
